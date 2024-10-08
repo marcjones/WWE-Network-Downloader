@@ -170,8 +170,8 @@ try:
     if END_TIME:
         kwargs.update({"end_time":END_TIME})
 except NameError:
-    END_TIME = 0
-    kwargs.update({"end_time":0})
+    END_TIME = video_link[3]
+    kwargs.update({"end_time":END_TIME})
 
 # Create a list where we will add our threads
 download_threads = []
@@ -222,6 +222,9 @@ if not os.path.exists(CONSTANTS.OUTPUT_FOLDER + "/" + clean_text(video_link[0]))
 
 if(download_subtitles):
     account.download_subtitles(stream_url[1], clean_text(title))
+
+# Download the thumbnail
+download.download_thumbnail(clean_text(title), video_link[5])
 
 # Finally we want to combine our audio and video files
 download.combine_videos(clean_text(title), clean_text(video_link[0]), keep_files=keep_files, has_subtitles=download_subtitles)

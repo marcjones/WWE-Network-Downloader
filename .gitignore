@@ -11,3 +11,4 @@ compiler/*
 *.mkv
 *.pyc
 events.db
+.idea

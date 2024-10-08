@@ -72,7 +72,7 @@ class wwe_network:
 
         self._set_authentication()
 
-    
+
 
     def m3u8_stream(self, stream_link: str):
         """Get the subtitle and the HLS m3u8 stream links. Used in conjunction with get_video_info.
@@ -93,13 +93,13 @@ class wwe_network:
             if i['format'] == "vtt":
                 subtitle_stream = i['url']
                 break
-                
+
         # Some videos appear to not have chapters. Should fix https://github.com/freyta/WWE-Network-Downloader/issues/32
         try:
             chapters = stream['annotations']['titles']
         except TypeError:
             chapters = None
-                    
+
         return stream['hls'][0]['url'], subtitle_stream, chapters
 
 
@@ -112,7 +112,7 @@ class wwe_network:
         # Open and write the subtitle data
         vtt_file = open(f"{CONSTANTS.TEMP_FOLDER}/{episode_title}.vtt", "w")
         vtt_file.write(subtitle_data)
-        
+
         print("Finished writing the subtitle file")
         # Close the file
         vtt_file.close()
@@ -120,7 +120,7 @@ class wwe_network:
 
 
     def write_metadata(self, link, episode_title, chapterize=False, start=None, end=None):
-        
+
         print("\nStarting to write the metadata file")
         meta_file = open(f"{CONSTANTS.TEMP_FOLDER}/{episode_title}-metafile", "w")
         meta_file.write(f";FFMETADATA1\n\
@@ -128,7 +128,7 @@ title={episode_title}\n")
 
         if chapterize:
             print("\nWriting chapter information")
-            
+
             # Get the chapter data
             chapter_data = self._session.get(link).content.decode('utf-8')
             # Match the chapter information. Example is below
@@ -136,30 +136,30 @@ title={episode_title}\n")
             # 402712                                        <----- Ignored
             # 00:18:47.601 --> 00:31:26.334                 <----- Wanted
             # Steamboat vs Pillman: Halloween Havoc 1992    <----- Wanted
-            
+
             chapters = re.findall(r'(\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3})\n(.*?)\n\n', chapter_data)
-            
+
             # Write the chapter information.
             # We loop through all the chapters, but only write the information which is between
             # our start and stop time. 
-           for i in chapters:
+            for i in chapters:
                 timestamp = re.findall(r'(\d{2}:\d{2}:\d{2})', i[0])
                 timestamp_start = timestamp[0]
                 timestamp_end   = timestamp[1]
-                
+
                 if (time_to_seconds(timestamp_end) >= start and (end == 0 or time_to_seconds(timestamp_end) <= end)):
                     print(f"{html.unescape(i[1])}: {time_to_seconds(timestamp_start)} - {time_to_seconds(timestamp_end)}")
                     meta_file.write(f"[CHAPTER]\nTIMEBASE=1/1000\nSTART={str(time_to_seconds(timestamp_start) * 1000)}\nEND={str(time_to_seconds(timestamp_end) * 1000)}\ntitle={html.unescape(i[1])}\n\n")
-            
+
             print("Finished writing chapter information\n")
-        
+
         print("\nStarting to write the stream title")
         meta_file.write(f"[STREAM]\ntitle={episode_title}")
         print("Finished writing the stream title\n")
-        
+
         print("Finished writing the metadata file")
         meta_file.close()
-        
+
     def get_video_info(self, link):
         """Gets the information needed to download a video
 
@@ -170,10 +170,13 @@ title={episode_title}\n")
             file_name: The title of the video you are going to download
             stream_url: The URL of the JSON file used to obtain the m3u8 and subtitles
             season_information: The season and episode number of the video
+            duration: The duration of the video in seconds
+            description: The description of the episode
+            thumbnail: The URL of the episode thumbnail
         """
         # Link: https://dce-frontoffice.imggaming.com/api/v4/vod/500603?includePlaybackDetails=URL
         api_link = self._session.get(f'https://dce-frontoffice.imggaming.com/api/v4/vod/{link}?includePlaybackDetails=URL').json()
-        
+
         # If we have an invalid link, quit
         try:
             if api_link["message"]:
@@ -181,7 +184,7 @@ title={episode_title}\n")
                 return
         except KeyError:
             pass
-        
+
         if api_link['accessLevel'] == "DENIED":
             print("You don't have access to this video. Invalid subscription?")
             exit()
@@ -195,8 +198,17 @@ title={episode_title}\n")
             season_information = f"S{api_link['episodeInformation']['seasonNumber']}E{api_link['episodeInformation']['episodeNumber']}"
         except KeyError:
             season_information = ""
-        
-        return file_name, stream_url, season_information
+
+        # Duration in seconds
+        duration = api_link['duration']
+
+        # Episode description
+        description = api_link['description']
+
+        # Episode thumbnail
+        thumbnail = api_link['thumbnailUrl']
+
+        return file_name, stream_url, season_information, duration, description, thumbnail
 
 
 if __name__ == "__main__":

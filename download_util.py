@@ -57,7 +57,12 @@ class download:
                 -i "{subtitles}"\
                 -i "{input_file}.ts"\
                 -i "{input_file}.aac"\
+                -i "{input_file}.jpg"\
                 -i "{metafile}" -map_metadata 1\
+                -map 0:v\
+                -map 1:a\
+                -map 2\
+                -disposition:v:1 attached_pic\
                 -c copy\
                 -c:s mov_text\
                 "{output_file}.mp4" -y')
@@ -65,7 +70,12 @@ class download:
             ffmpeg_command = (f'ffmpeg \
                 -i "{input_file}.ts"\
                 -i "{input_file}.aac"\
+                -i "{input_file}.jpg"\
                 -i "{metafile}" -map_metadata 1\
+                -map 0:v\
+                -map 1:a\
+                -map 2\
+                -disposition:v:1 attached_pic\
                 -c copy\
                 "{output_file}.mp4" -y')
 
@@ -76,6 +86,7 @@ class download:
             os.remove(f"{os.getcwd()}/{CONSTANTS.TEMP_FOLDER}/{title}.ts")
             os.remove(f"{os.getcwd()}/{CONSTANTS.TEMP_FOLDER}/{title}.ts.part")
             os.remove(f"{os.getcwd()}/{CONSTANTS.TEMP_FOLDER}/{title}-metafile")
+            os.remove(f"{os.getcwd()}/{CONSTANTS.TEMP_FOLDER}/{title}.jpg")
             # Try to remove the subtitles file, we will error if it isn't found
             try:
                 os.remove(f"{os.getcwd()}/{CONSTANTS.TEMP_FOLDER}/{title}.vtt")
@@ -152,6 +163,17 @@ class download:
             pass
 
         print(f"\r{format} files finished downloading")
+
+    def download_thumbnail(self, title, url):
+        # build output file name
+        filename = f"{os.getcwd()}/{CONSTANTS.TEMP_FOLDER}/{title}.jpg"
+
+        # download image
+        response = self.http.request('GET', url)
+
+        # write to file
+        with open(filename, 'wb') as file:
+            file.write(response.data)
 
 if __name__ == "__main__":
     print("Please run python main.py instead.")
