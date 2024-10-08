@@ -11,13 +11,20 @@ Features include the following:
 
 ### Prerequisites
 
-You must have at least version 4.2 ffmpeg installed and in your PATH.
+#### Install ffmpeg
+You must have at least version 4.2 ffmpeg installed and in your PATH. You can get ffmpeg from Homebrew:
 
+`brew install ffmpeg`
+
+#### Install Python requirements
 Using pip3 install the required modules:
 
 `pip3 install --user -r requirements.txt`
 
-Edit the username and password variables in CONSTANTS.py to include your subscription email and password
+#### Store WWE Network credentials
+Make a copy of `.env.template` named `.env`
+
+Edit the username and password variables in `.env` to include your subscription email and password.
 
 ### Usage instructions
 
@@ -40,6 +47,7 @@ Edit the username and password variables in CONSTANTS.py to include your subscri
 > **-q** - Quality of the video you want to download. 1 is 1080p high (default) 6 being 288p (lowest).\
 > **-c** - Add milestone chapters to the video.\
 > **--subtitles** - Downloads the subtitles.\
+> **-of** - Specify custom name for output file.\
 > **-k** - Keep temporary aac and ts files.\
 > **-e** - Write a Kodi episode NFO file.\
 > **-s** - Write a Kodi series NFO file with poster and fanart.\
