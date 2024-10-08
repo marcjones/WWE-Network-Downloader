@@ -12,3 +12,5 @@ compiler/*
 *.pyc
 events.db
 .idea
+.env
+.DS_Store
