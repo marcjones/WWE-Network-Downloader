@@ -11,14 +11,14 @@ PASSWORD = os.getenv("PASSWORD")
 # TO GET THE EPISODE JSON INFORMATION
 
 HEADERS = {
-  'x-api-key': os.getenv("API_KEY"),
-  'Realm': 'dce.wwe',
-  'x-app-var': '6.0.1.f8add0e'
+    'x-api-key': os.getenv("API_KEY"),
+    'Realm': 'dce.wwe',
+    'x-app-var': '6.0.1.f8add0e'
 }
 
 # FOR THE DOWNLOADER
 DOWNLOAD_HEADERS = {
-  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0'}
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0'}
 OUTPUT_FOLDER = "output"
 TEMP_FOLDER = "temp"
 
@@ -32,5 +32,5 @@ VIDEO_QUALITY = [8000,  # 1080p high
                  600]  # 288p
 
 if __name__ == "__main__":
-  print("Please run python main.py instead.")
-  pass
+    print("Please run python main.py instead.")
+    pass

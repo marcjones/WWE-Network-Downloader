@@ -3,7 +3,7 @@
 import re
 import html
 import requests
-import CONSTANTS
+from util import CONSTANTS
 
 
 def time_to_seconds(time):

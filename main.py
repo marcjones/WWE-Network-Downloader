@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-
+from util import utils, CONSTANTS
 import wwe
 import m3u8, os, re
 import argparse
-import download_util, CONSTANTS, db_util
+from download import download_util
+from db import db_util
 import time
 import threading
 from shutil import which
@@ -177,7 +178,7 @@ audio_playlist = download.get_playlist_object(audio_qualities[0][1])
 # The kwargs we will pass to the downloader
 kwargs = {"playlist": audio_playlist,
           "base_url": audio_qualities[0][1].split("index.m3u8")[0],
-          "title": clean_text(title)
+          "title": utils.clean_text(title)
           }
 
 # If we have a start_time then add the set start time, otherwise default to 0
@@ -239,22 +240,22 @@ for thread in download_threads:
   thread.join()
 
 # Download the chapter information
-account.write_metadata(stream_url[2], clean_text(title), args['chapter'],
+account.write_metadata(stream_url[2], utils.clean_text(title), args['chapter'],
                        START_FROM, END_TIME)
 
 # Create output folder if it doesn't exist
 if not os.path.exists(
-    CONSTANTS.OUTPUT_FOLDER + "/" + clean_text(video_link[0])):
-  os.makedirs(CONSTANTS.OUTPUT_FOLDER + "/" + clean_text(video_link[0]))
+    CONSTANTS.OUTPUT_FOLDER + "/" + utils.clean_text(video_link[0])):
+  os.makedirs(CONSTANTS.OUTPUT_FOLDER + "/" + utils.clean_text(video_link[0]))
 
 if (download_subtitles):
-  account.download_subtitles(stream_url[1], clean_text(title))
+  account.download_subtitles(stream_url[1], utils.clean_text(title))
 
 # Download the thumbnail
-download.download_thumbnail(clean_text(title), video_link[5])
+download.download_thumbnail(utils.clean_text(title), video_link[5])
 
 # Finally we want to combine our audio and video files
-download.combine_videos(clean_text(title), clean_text(video_link[0]),
+download.combine_videos(utils.clean_text(title), utils.clean_text(video_link[0]),
                         keep_files=keep_files, has_subtitles=download_subtitles)
 
 # Insert the downloaded video into our database

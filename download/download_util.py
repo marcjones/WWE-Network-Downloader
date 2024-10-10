@@ -3,7 +3,7 @@
 import urllib3, certifi
 import m3u8, json
 import sys, subprocess, os
-import CONSTANTS
+from util import CONSTANTS
 
 
 class download:

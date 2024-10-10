@@ -7,7 +7,7 @@ class database:
 
   # Initialise the database
   def __init__(self):
-    self.conn = sqlite3.connect("events.db")
+    self.conn = sqlite3.connect("../events.db")
     self.c = self.conn.cursor()
 
   # Connect to the database. If the file doesn't exist, it creates it.
