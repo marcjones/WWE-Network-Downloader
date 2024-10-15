@@ -59,6 +59,9 @@ def parse_args():
     parser.add_argument('-of', '--output_filename',
                         help='Custom output file name',
                         required=False)
+    parser.add_argument('-od', '--output_dir',
+                        help='Custom output directory name (under /output)',
+                        required=False)
     parser.add_argument('-dp', '--date_prefix',
                         help='Prefix the output file with episode date in '
                              'YYYY-MM-DD format',
@@ -87,6 +90,7 @@ def build_episode_download_request(args):
         end_time=end_time,
         output_filename=args.output_filename,
         filename_date_prefix=args.date_prefix,
+        output_dir=args.output_dir,
         quality=args.quality,
         force=args.force,
         chapters=args.chapters,
@@ -105,6 +109,7 @@ def build_season_download_request(args):
     return SeasonDownloadRequest(
         season_id=season_id,
         filename_date_prefix=args.date_prefix,
+        output_dir=args.output_dir,
         quality=args.quality,
         force=args.force,
         chapters=args.chapters,

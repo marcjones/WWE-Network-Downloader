@@ -6,7 +6,7 @@ import requests
 
 from model.download_request import EpisodeDownloadRequest, SeasonDownloadRequest
 from model.season_info import SeasonInfo
-from model.video_info import VideoInfo
+from model.video_info import EpisodeInfo
 from util import CONSTANTS, utils
 
 LOGIN_URL = 'https://dce-frontoffice.imggaming.com/api/v2/login'
@@ -80,41 +80,51 @@ class WWEClient:
             if date:
                 custom_title = f'[{date}] {custom_title}'
 
-        return VideoInfo(id=video_id,
-                         title=response['title'],
-                         custom_title=utils.clean_text(custom_title),
-                         description=response['description'],
-                         long_description=response['longDescription'],
-                         duration_seconds=response['duration'],
-                         thumbnail_url=response['thumbnailUrl'],
-                         series=series,
-                         season=season,
-                         season_number=season_number,
-                         episode_number=episode_number,
-                         preview_thumbnails_url=response['thumbnailsPreview'],
-                         base_url=m3u8_url.split('.m3u8')[0].rsplit('/', 1)[0],
-                         m3u8_url=m3u8_url,
-                         subtitle_url=subtitles_url,
-                         chapter_titles_url=chapter_titles_url,
-                         chapter_thumbnails_url=chapter_thumbnails_url)
+        return EpisodeInfo(id=video_id,
+                           title=response['title'],
+                           custom_title=utils.clean_text(custom_title),
+                           description=response['description'],
+                           long_description=response['longDescription'],
+                           duration_seconds=response['duration'],
+                           thumbnail_url=response['thumbnailUrl'],
+                           series=series,
+                           season=season,
+                           season_number=season_number,
+                           episode_number=episode_number,
+                           preview_thumbnails_url=response['thumbnailsPreview'],
+                           base_url=m3u8_url.split('.m3u8')[0].rsplit('/', 1)[
+                               0],
+                           m3u8_url=m3u8_url,
+                           subtitle_url=subtitles_url,
+                           chapter_titles_url=chapter_titles_url,
+                           chapter_thumbnails_url=chapter_thumbnails_url)
 
     def get_season_info(self, request: SeasonDownloadRequest):
         season_id = request.season_id
         episodes = []
-        prev_page = ''
-        load_more = True
+
+        first_response = self._session.get(
+            f'{SEASON_INFO_PATH}{season_id}').json()
+
+        title = first_response.get('title')
+        first_page = first_response.get('paging')
+        prev_page = first_page.get('lastSeen')
+        load_more = first_page.get('moreDataAvailable')
+
+        for episode in first_response.get('episodes'):
+            episodes.append(episode.get('id'))
 
         while load_more:
             response = self._session.get(
                 f'{SEASON_INFO_PATH}{season_id}?lastSeen={prev_page}').json()
-            page_info = response.get('paging')
-            prev_page = page_info.get('lastSeen')
-            load_more = page_info.get('moreDataAvailable')
+            page = response.get('paging')
+            prev_page = page.get('lastSeen')
+            load_more = page.get('moreDataAvailable')
 
             for episode in response.get('episodes'):
                 episodes.append(episode.get('id'))
 
-        return SeasonInfo(id=season_id, episodes=episodes)
+        return SeasonInfo(id=season_id, title=title, episodes=episodes)
 
     def get_streams(self, callback_url):
         stream = self._session.get(callback_url,
@@ -137,14 +147,29 @@ class WWEClient:
         return m3u8, subtitle_stream, chapter_titles, chapter_thumbnails
 
     def write_metadata(self, request: EpisodeDownloadRequest,
-        video_info: VideoInfo):
+        video_info: EpisodeInfo):
         print("\nStarting to write the metadata file")
         title = utils.clean_text(video_info.title)
+        description = utils.clean_text(video_info.description)
+        synopsis = utils.clean_text(video_info.long_description)
+        show = video_info.series
+        episode_id = title
+        episode_sort = video_info.episode_number
+        season_number = video_info.season_number
+        network = 'WWE'
         meta_file = open(
             f"{CONSTANTS.TEMP_FOLDER}/{video_info.custom_title}-metafile", "w")
         # TODO: write other metadata
-        meta_file.write(f";FFMETADATA1\n\
-    title={title}\n")
+        meta_file.write(
+            f";FFMETADATA1\n\
+            title={title}\n\
+            description={description}\n\
+            synopsis={synopsis}\n\
+            show={show}\n\
+            episode_id={episode_id}\n\
+            episode_sort={episode_sort}\n\
+            season_number={season_number}\n\
+            network={network}\n")
 
         if request.chapters and video_info.chapter_titles_url:
             print("\nWriting chapter information")

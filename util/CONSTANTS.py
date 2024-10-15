@@ -23,7 +23,7 @@ OUTPUT_FOLDER = "output"
 TEMP_FOLDER = "temp"
 
 # VIDEO SIZE INFORMATION
-VIDEO_QUALITY = [8000,  # 1080p high
+VIDEO_QUALITY = [100000,  # 1080p high (this was set to 8000 but was actually missing the higher quality stream which is above 8000000 avg bandwidth)
                  5000,  # 1080p low
                  4000,  # 720p high
                  2000,  # 720p low

@@ -73,11 +73,15 @@ def download_episode(request: EpisodeDownloadRequest, client: WWEClient):
     # Download the chapter information
     client.write_metadata(request, video_info)
 
+    output_dir = utils.clean_text(
+        request.output_dir) if request.output_dir else utils.clean_text(
+        video_info.title)
+
     # Create output folder if it doesn't exist
     if not os.path.exists(
-        CONSTANTS.OUTPUT_FOLDER + "/" + utils.clean_text(video_info.title)):
+        CONSTANTS.OUTPUT_FOLDER + "/" + output_dir):
         os.makedirs(
-            CONSTANTS.OUTPUT_FOLDER + "/" + utils.clean_text(video_info.title))
+            CONSTANTS.OUTPUT_FOLDER + "/" + output_dir)
 
     if request.subtitles:
         pass
@@ -89,8 +93,8 @@ def download_episode(request: EpisodeDownloadRequest, client: WWEClient):
                                 video_info.thumbnail_url)
 
     # Finally we want to combine our audio and video files
-    download.combine_videos(video_info.custom_title,
-                            utils.clean_text(video_info.title),
+    download.combine_videos(title=video_info.custom_title,
+                            file_folder=output_dir,
                             keep_files=request.keep_files,
                             has_subtitles=request.subtitles)
 

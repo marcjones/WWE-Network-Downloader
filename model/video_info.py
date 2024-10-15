@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class VideoInfo:
+class EpisodeInfo:
     id: str
     title: str
     custom_title: str
