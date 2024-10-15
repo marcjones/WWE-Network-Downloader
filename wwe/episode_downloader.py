@@ -8,14 +8,17 @@ from db import db_util
 from download import download_util
 from model.download_request import EpisodeDownloadRequest
 from util import utils, CONSTANTS
-from wwe import wwe_v2
+from wwe.wwe_v2 import WWEClient
 
 
 def download_episode(request: EpisodeDownloadRequest):
-    partial_download = request.start_time is not None
-
-    client = wwe_v2.WWEClient()
+    client = WWEClient()
     client.login()
+    download_episode(request, client)
+
+
+def download_episode(request: EpisodeDownloadRequest, client: WWEClient):
+    partial_download = request.start_time is not None
 
     video_info = client.get_video_info(request)
 

@@ -4,12 +4,14 @@ from datetime import datetime
 
 import requests
 
-from model.download_request import EpisodeDownloadRequest
+from model.download_request import EpisodeDownloadRequest, SeasonDownloadRequest
+from model.season_info import SeasonInfo
 from model.video_info import VideoInfo
 from util import CONSTANTS, utils
 
 LOGIN_URL = 'https://dce-frontoffice.imggaming.com/api/v2/login'
-INFO_PATH = 'https://dce-frontoffice.imggaming.com/api/v4/vod/'
+EPISODE_INFO_PATH = 'https://dce-frontoffice.imggaming.com/api/v4/vod/'
+SEASON_INFO_PATH = 'https://dce-frontoffice.imggaming.com/api/v4/season/'
 
 
 class WWEClient:
@@ -44,7 +46,7 @@ class WWEClient:
     def get_video_info(self, request: EpisodeDownloadRequest):
         video_id = request.episode_id
         response = self._session.get(
-            f'{INFO_PATH}{video_id}?includePlaybackDetails=URL').json()
+            f'{EPISODE_INFO_PATH}{video_id}?includePlaybackDetails=URL').json()
 
         try:
             if response['message']:
@@ -95,6 +97,24 @@ class WWEClient:
                          subtitle_url=subtitles_url,
                          chapter_titles_url=chapter_titles_url,
                          chapter_thumbnails_url=chapter_thumbnails_url)
+
+    def get_season_info(self, request: SeasonDownloadRequest):
+        season_id = request.season_id
+        episodes = []
+        prev_page = ''
+        load_more = True
+
+        while load_more:
+            response = self._session.get(
+                f'{SEASON_INFO_PATH}{season_id}?lastSeen={prev_page}').json()
+            page_info = response.get('paging')
+            prev_page = page_info.get('lastSeen')
+            load_more = page_info.get('moreDataAvailable')
+
+            for episode in response.get('episodes'):
+                episodes.append(episode.get('id'))
+
+        return SeasonInfo(id=season_id, episodes=episodes)
 
     def get_streams(self, callback_url):
         stream = self._session.get(callback_url,
