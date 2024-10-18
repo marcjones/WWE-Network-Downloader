@@ -13,7 +13,6 @@ from wwe.wwe_v2 import WWEClient
 
 def download_episode(request: EpisodeDownloadRequest):
     client = WWEClient()
-    client.login()
     download_episode(request, client)
 
 

@@ -1,5 +1,6 @@
 import html
 import re
+import time
 from datetime import datetime
 
 import requests
@@ -10,43 +11,24 @@ from model.video_info import EpisodeInfo
 from util import CONSTANTS, utils
 
 LOGIN_URL = 'https://dce-frontoffice.imggaming.com/api/v2/login'
+REFRESH_TOKEN_URL = 'https://dce-frontoffice.imggaming.com/api/v2/token/refresh'
 EPISODE_INFO_PATH = 'https://dce-frontoffice.imggaming.com/api/v4/vod/'
 SEASON_INFO_PATH = 'https://dce-frontoffice.imggaming.com/api/v4/season/'
+MAX_SESSION_SECONDS = 600
+EARLIEST_REFERESH_SECONDS = MAX_SESSION_SECONDS - 90
 
 
 class WWEClient:
     def __init__(self):
         with requests.Session() as self._session:
             self._session.headers.update(CONSTANTS.HEADERS)
-
-        self.user = CONSTANTS.USERNAME
-        self.password = CONSTANTS.PASSWORD
-        self.logged_in = False
-        self.refreshToken = None
-
-    def login(self):
-        payload = {
-            'id': self.user,
-            'secret': self.password
-        }
-
-        token_data = self._session.post(LOGIN_URL, json=payload,
-                                        headers=CONSTANTS.HEADERS).json()
-
-        if 'code' in token_data:
-            raise ConnectionError(
-                'Error while logging in. Possibly invalid username/password')
-
-        self.refreshToken = token_data['refreshToken']
-        self._session.headers.update(
-            {'Authorization': f'Bearer {token_data["authorisationToken"]}'})
-        print('Succesfully logged in')
-        self.logged_in = True
+        self._refresh_token = None
+        self._last_token_refresh = None
 
     def get_video_info(self, request: EpisodeDownloadRequest):
         video_id = request.episode_id
-        response = self._session.get(
-            f'{EPISODE_INFO_PATH}{video_id}?includePlaybackDetails=URL').json()
+        response = self._get_json(
+            f'{EPISODE_INFO_PATH}{video_id}?includePlaybackDetails=URL')
 
         try:
             if response['message']:
@@ -76,7 +58,7 @@ class WWEClient:
         custom_title = request.output_filename if request.output_filename else episode_title
 
         if request.filename_date_prefix:
-            date = self.parse_date(episode_title)
+            date = self._parse_date(episode_title)
             if date:
                 custom_title = f'[{date}] {custom_title}'
 
@@ -103,8 +85,7 @@ class WWEClient:
         season_id = request.season_id
         episodes = []
 
-        first_response = self._session.get(
-            f'{SEASON_INFO_PATH}{season_id}').json()
+        first_response = self._get_json(f'{SEASON_INFO_PATH}{season_id}')
 
         title = first_response.get('title')
         first_page = first_response.get('paging')
@@ -115,8 +96,8 @@ class WWEClient:
             episodes.append(episode.get('id'))
 
         while load_more:
-            response = self._session.get(
-                f'{SEASON_INFO_PATH}{season_id}?lastSeen={prev_page}').json()
+            response = self._get_json(
+                f'{SEASON_INFO_PATH}{season_id}?lastSeen={prev_page}')
             page = response.get('paging')
             prev_page = page.get('lastSeen')
             load_more = page.get('moreDataAvailable')
@@ -127,8 +108,7 @@ class WWEClient:
         return SeasonInfo(id=season_id, title=title, episodes=episodes)
 
     def get_streams(self, callback_url):
-        stream = self._session.get(callback_url,
-                                   headers=CONSTANTS.HEADERS).json()
+        stream = self._get_json(callback_url)
 
         m3u8 = stream['hls'][0]['url']
 
@@ -178,8 +158,7 @@ class WWEClient:
             end_time = request.end_time if request.end_time else video_info.duration_seconds + 1
 
             # Get the chapter data
-            chapter_data = self._session.get(
-                video_info.chapter_titles_url).content.decode('utf-8')
+            chapter_data = self._get_utf8(video_info.chapter_titles_url)
             # Match the chapter information. Example is below
             #
             # 402712                                        <----- Ignored
@@ -214,9 +193,10 @@ class WWEClient:
         print("Finished writing the metadata file")
         meta_file.close()
 
-    def parse_date(self, input):
+    @staticmethod
+    def _parse_date(input):
         # Regex matches the format "Month. DD, YYYY"
-        date_pattern = r'([A-Za-z]+)\.\s+(\d{2}),\s+(\d{4})$'
+        date_pattern = r'([A-Za-z]+)\.?\s+(\d{2}),\s+(\d{4})$'
 
         # Check if the input ends with a date in this format
         match = re.search(date_pattern, input)
@@ -235,3 +215,54 @@ class WWEClient:
                 return None
 
         return None
+
+    def _get_json(self, path):
+        self._auth()
+        return self._session.get(path).json()
+
+    def _get_utf8(self, path):
+        self._auth()
+        return self._session.get(path).content.decode('utf-8')
+
+    def _auth(self):
+        if not self._refresh_token:
+            self._login()
+
+        elif time.time() - self._last_token_refresh >= EARLIEST_REFERESH_SECONDS:
+            # auth tokens are valid for 600 seconds and can be refreshed from
+            # 510 seconds
+            self._refresh_auth()
+
+    def _login(self):
+        payload = {
+            'id': CONSTANTS.USERNAME,
+            'secret': CONSTANTS.PASSWORD
+        }
+
+        response = self._session.post(LOGIN_URL, json=payload,
+                                      headers=CONSTANTS.HEADERS).json()
+
+        if 'code' in response:
+            raise ConnectionError(
+                'Error while logging in. Possibly invalid username/password.')
+
+        self._update_auth_tokens(response)
+        print('Successfully logged in')
+
+    def _refresh_auth(self):
+        response = self._session.post(url=REFRESH_TOKEN_URL, json={
+            'refreshToken': self._refresh_token}).json()
+
+        if 'code' in response:
+            print(
+                'Error refreshing authorisation. Attempting new login...')
+            self._login()
+
+        self._update_auth_tokens(response)
+        print('Successfully refreshed authorisation token')
+
+    def _update_auth_tokens(self, auth_response):
+        self._session.headers.update(
+            {'Authorization': f'Bearer {auth_response["authorisationToken"]}'})
+        self._refresh_token = auth_response['refreshToken']
+        self._last_token_refresh = time.time()

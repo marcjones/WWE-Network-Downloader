@@ -6,7 +6,6 @@ from wwe.wwe_v2 import WWEClient
 
 def download_season(request: SeasonDownloadRequest):
     client = WWEClient()
-    client.login()
     season_info = client.get_season_info(request)
     episode_download_requests = build_episode_download_requests(season_info,
                                                                 request)

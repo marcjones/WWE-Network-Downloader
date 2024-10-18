@@ -29,10 +29,12 @@ def parse_args():
                              help='Link or ID of episode to download. e.g. '
                                   'https://network.wwe.com/video/178225 or '
                                   '178225')
+    # TODO: add filters for number of episodes / episode id to & from
     content_ids.add_argument('-s', '--season', type=str,
                              help='Link or ID of season to download. e.g. '
                                   'https://network.wwe.com/season/15072 or '
                                   '15072')
+    # TODO: fix quality selection properly
     parser.add_argument('-q', '--quality',
                         help='Quality of video to download. Value between 0 ('
                              'highest) and 6 (lowest). Defaults to 0 (1080p '
