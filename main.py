@@ -75,7 +75,7 @@ def parse_args():
 
     # Shared args
     # TODO: fix quality selection properly
-    parser.add_argument('-q', '--quality',
+    parser.add_argument('-q', '--quality', type=int,
                         help='Quality of video to download. Value between 0 ('
                              'highest) and 6 (lowest). Defaults to 0 (1080p '
                              'HIGH)',

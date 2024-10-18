@@ -11,12 +11,8 @@ from util import utils, CONSTANTS
 from wwe.wwe_v2 import WWEClient
 
 
-def download_episode(request: EpisodeDownloadRequest):
-    client = WWEClient()
-    download_episode(request, client)
-
-
-def download_episode(request: EpisodeDownloadRequest, client: WWEClient):
+def download_episode(request: EpisodeDownloadRequest,
+    client: WWEClient = WWEClient()):
     partial_download = request.start_time is not None
 
     video_info = client.get_video_info(request)
@@ -138,24 +134,21 @@ def get_video_download_kwargs(request, video_info, m3u8_obj, download):
     video_selections = []
 
     for stream in m3u8_obj.playlists:
-
-        # Get all playlists that fit within our quality requirements
-        if stream.stream_info.average_bandwidth <= CONSTANTS.VIDEO_QUALITY[
-            request.quality] * 1000:
-            # Create a list of potential URIs
-            video_selections.append((stream.stream_info.bandwidth,
-                                     video_info.base_url + "/" + stream.uri))
+        video_selections.append((stream.stream_info.bandwidth,
+                                 video_info.base_url + "/" + stream.uri))
 
     # Select the first one which has the highest bitrate
     video_selections.sort(reverse=True)
 
+    selected_stream = video_selections[request.quality]
+
     # Get the playlist m3u8 we want to download
-    video_playlist = download.get_playlist_object(video_selections[0][1])
+    video_playlist = download.get_playlist_object(selected_stream[1])
 
     return {"playlist": video_playlist,
-            "base_url": video_selections[0][1].split("index.m3u8")[0],
+            "base_url": selected_stream[1].split("index.m3u8")[0],
             "title": video_info.custom_title,
             "start_from": request.start_time if request.start_time is not None else 0,
             "end_time": request.end_time if request.end_time is not None else video_info.duration_seconds,
-            "bitrate": video_selections[0][0]
+            "bitrate": selected_stream[0]
             }

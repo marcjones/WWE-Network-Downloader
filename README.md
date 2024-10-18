@@ -45,6 +45,22 @@ Edit the username and password variables in `.env` to include your subscription 
 
 `python3 main.py -c -dp -q 2 -e https://network.wwe.com/video/67585`
 
+#### Quality selection
+
+WWE Network provides 7 options for video quality. See below how the quality options correspond to resolution and output file size. As an example, a 90 minute episode of Raw at the highest quality is around 5.5 GB.
+
+| Option | Resolution         | Approx file size (per hour) |
+|--------|--------------------|-----------------------------|
+| 0      | 1920 x 1080 (high) | 3.65 GB                     |                     
+| 1      | 1920 x 1080 (low)  | 2.30 GB                     |                     
+| 2      | 1280 x 720  (high) | 1.60 GB                     |                     
+| 3      | 1280 x 720 (low)   | 775 MB                      |                     
+| 4      | 896 x 504          | -                           |                     
+| 5      | 640 x 360          | -                           |                     
+| 6      | 512 x 288          | 275 MB                      |
+
+For audio, this tool always downloads English language at the highest quality (192kpbs AAC).
+
 ### Options
 
 #### Required options
