@@ -25,15 +25,55 @@ def parse_args():
         description='Download videos from WWE Network.')
 
     content_ids = parser.add_mutually_exclusive_group(required=True)
+
+    # Download either an episode or a season. Exactly 1 arg supported of these 2
     content_ids.add_argument('-e', '--episode', type=str,
                              help='Link or ID of episode to download. e.g. '
                                   'https://network.wwe.com/video/178225 or '
                                   '178225')
-    # TODO: add filters for number of episodes / episode id to & from
     content_ids.add_argument('-s', '--season', type=str,
                              help='Link or ID of season to download. e.g. '
                                   'https://network.wwe.com/season/15072 or '
                                   '15072')
+
+    # Episode only args
+    parser.add_argument('-st', '--start_time',
+                        help='Where in the episode to start the download in '
+                             'HH:MM:SS (not supported for season downloads)',
+                        required=False)
+    parser.add_argument('-et', '--end_time',
+                        help='Where in the episode to stop the download in '
+                             'HH:MM:SS (not supported for season downloads)',
+                        required=False)
+    parser.add_argument('-of', '--output_filename',
+                        help='Custom output file name (not supported for '
+                             'season downloads)',
+                        required=False)
+
+    # Season only args
+    parser.add_argument('--episode-count', type=int,
+                        help='Maximum number of episodes to download when '
+                             'downloading a season. Defaults to no limit. Can '
+                             'be used in combination with --season-from. If '
+                             'used with --season-to then whichever limitation '
+                             'is reached first will override the other.',
+                        required=False, default=0)
+    parser.add_argument('--season-from', type=str,
+                        help='Link or ID of the episode to start downloading '
+                             'from when downloading a season. e.g. '
+                             'https://network.wwe.com/video/178225 or 178225. '
+                             'When present, any episodes that appear before '
+                             'the one specified in the seasons episode list '
+                             'will NOT be downloaded.', required=False)
+    parser.add_argument('--season-to', type=str,
+                        help='Link or ID of the episode to stop downloading '
+                             'at when downloading a season. e.g. '
+                             'https://network.wwe.com/video/178225 or 178225. '
+                             'When present, any episodes that appear after '
+                             'the one specified in the seasons episode list '
+                             'will NOT be downloaded.', required=False)
+
+    # Shared args
     # TODO: fix quality selection properly
     parser.add_argument('-q', '--quality',
                         help='Quality of video to download. Value between 0 ('
@@ -50,17 +90,6 @@ def parse_args():
                         help='Keep the temporary download files',
                         required=False,
                         action='store_true')
-    parser.add_argument('-st', '--start_time',
-                        help='Where in the episode to start the download in '
-                             'HH:MM:SS',
-                        required=False)
-    parser.add_argument('-et', '--end_time',
-                        help='Where in the episode to stop the download in '
-                             'HH:MM:SS',
-                        required=False)
-    parser.add_argument('-of', '--output_filename',
-                        help='Custom output file name',
-                        required=False)
     parser.add_argument('-od', '--output_dir',
                         help='Custom output directory name (under /output)',
                         required=False)
@@ -76,18 +105,12 @@ def parse_args():
 
 
 def build_episode_download_request(args):
-    episode_id = utils.parse_download_id(args.episode)
-    if not episode_id:
-        raise argparse.ArgumentError(
-            "ERROR: Invalid value for 'episode' - a valid video url or ID "
-            "must be provided")
-
     start_time = utils.time_to_seconds(
         args.start_time) if args.start_time else None
     end_time = utils.time_to_seconds(args.end_time) if args.end_time else None
 
     return EpisodeDownloadRequest(
-        episode_id=episode_id,
+        episode_id=(get_media_id(args.episode)),
         start_time=start_time,
         end_time=end_time,
         output_filename=args.output_filename,
@@ -102,14 +125,14 @@ def build_episode_download_request(args):
 
 
 def build_season_download_request(args):
-    season_id = utils.parse_download_id(args.season)
-    if not season_id:
-        raise argparse.ArgumentError(
-            "ERROR: Invalid value for 'season' - a valid season url or ID "
-            "must be provided")
+    episode_from = get_media_id(args.season_from) if args.season_from else None
+    episode_to = get_media_id(args.season_to) if args.season_to else None
 
     return SeasonDownloadRequest(
-        season_id=season_id,
+        season_id=get_media_id(args.season),
+        episode_count=args.episode_count,
+        episode_from_id=episode_from,
+        episode_to_id=episode_to,
         filename_date_prefix=args.date_prefix,
         output_dir=args.output_dir,
         quality=args.quality,
@@ -118,6 +141,15 @@ def build_season_download_request(args):
         subtitles=args.subtitles,
         keep_files=args.keep_files
     )
+
+
+def get_media_id(input_val):
+    media_id = utils.parse_media_id(input_val)
+    if not media_id:
+        raise argparse.ArgumentError(
+            'ERROR: Invalid media link or id - a valid episode or season URL '
+            'or ID must be provided')
+    return media_id
 
 
 def quality_validator(value):

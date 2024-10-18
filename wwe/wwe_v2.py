@@ -93,7 +93,7 @@ class WWEClient:
         load_more = first_page.get('moreDataAvailable')
 
         for episode in first_response.get('episodes'):
-            episodes.append(episode.get('id'))
+            episodes.append(str(episode.get('id')))
 
         while load_more:
             response = self._get_json(
@@ -139,7 +139,6 @@ class WWEClient:
         network = 'WWE'
         meta_file = open(
             f"{CONSTANTS.TEMP_FOLDER}/{video_info.custom_title}-metafile", "w")
-        # TODO: write other metadata
         meta_file.write(
             f";FFMETADATA1\n\
             title={title}\n\

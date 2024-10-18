@@ -26,7 +26,7 @@ def time_to_seconds(time):
     return time_in_seconds
 
 
-def parse_download_id(input_val):
+def parse_media_id(input_val):
     if input_val.isdigit():
         return input_val
 

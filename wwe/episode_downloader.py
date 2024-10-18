@@ -21,7 +21,8 @@ def download_episode(request: EpisodeDownloadRequest, client: WWEClient):
 
     video_info = client.get_video_info(request)
 
-    print('Obtained video information')
+    print(f'Obtained video information for episode ID {request.episode_id}')
+    print(f'Starting download for episode "{video_info.title}"')
 
     database = db_util.database()
     database.db_connect()

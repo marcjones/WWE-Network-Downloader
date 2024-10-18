@@ -21,6 +21,9 @@ class EpisodeDownloadRequest:
 @dataclass
 class SeasonDownloadRequest:
     season_id: str
+    episode_count: int
+    episode_from_id: str
+    episode_to_id: str
     filename_date_prefix: bool
     output_dir: str
     quality: int
