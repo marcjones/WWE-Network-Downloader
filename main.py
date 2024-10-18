@@ -37,15 +37,15 @@ def parse_args():
                                   '15072')
 
     # Episode only args
-    parser.add_argument('-st', '--start_time',
+    parser.add_argument('-st', '--start-time',
                         help='Where in the episode to start the download in '
                              'HH:MM:SS (not supported for season downloads)',
                         required=False)
-    parser.add_argument('-et', '--end_time',
+    parser.add_argument('-et', '--end-time',
                         help='Where in the episode to stop the download in '
                              'HH:MM:SS (not supported for season downloads)',
                         required=False)
-    parser.add_argument('-of', '--output_filename',
+    parser.add_argument('-of', '--output-filename',
                         help='Custom output file name (not supported for '
                              'season downloads)',
                         required=False)
@@ -86,14 +86,14 @@ def parse_args():
     parser.add_argument('-sb', '--subtitles',
                         help='Add subtitles to the video', required=False,
                         action='store_true')
-    parser.add_argument('-k', '--keep_files',
+    parser.add_argument('-k', '--keep-files',
                         help='Keep the temporary download files',
                         required=False,
                         action='store_true')
-    parser.add_argument('-od', '--output_dir',
+    parser.add_argument('-od', '--output-dir',
                         help='Custom output directory name (under /output)',
                         required=False)
-    parser.add_argument('-dp', '--date_prefix',
+    parser.add_argument('-dp', '--date-prefix',
                         help='Prefix the output file with episode date in '
                              'YYYY-MM-DD format',
                         required=False, action='store_true')

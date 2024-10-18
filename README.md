@@ -1,13 +1,12 @@
 WWE Network 2.0 Downloader (Improved)
 
-Freyta's WWE Network 2.0 Downloader using Python3. This was coded by me from scratch, ideas were taken from youtube-dl.
+Fork of Freyta's WWE Network 2.0 Downloader using Python3. This was coded by me from scratch, ideas were taken from youtube-dl.
 
 Features include the following:
-- Downloading from set start times
-- Ending at certain times (i.e. only downloading certain matches)
-- Qualtiy selection (1 being 1080p, 6 being 288p)
-- Kodi NFO file creations (TV episode and Series only at the moment - PPV needs to be added)
-- Part downloading of files.
+- Download single episodes or whole seasons
+- Downloading episodes between set start and end times (i.e. only downloading certain matches)
+- Quality selection (0 being 1080p high, 6 being 288p)
+- Partial downloading of seasons, limiting by number of episodes or starting / stopping at specific episodes
 
 ### Prerequisites
 
@@ -28,32 +27,50 @@ Edit the username and password variables in `.env` to include your subscription 
 
 ### Usage instructions
 
-###### Basic video download:
+###### Basic episode download:
 
-`python3 main.py -t https://watch.wwe.com/episode/SmackDown-130268`
+`python3 main.py -e https://network.wwe.com/video/67585`
 
-###### Download with start and end times, using custom file name:
+###### Basic season download:
 
-`python3 main.py -st 1619.934 -et 1712.834 -of 'Tucker confronts Mandy Rose Smackdown 02-21-2020' -t https://watch.wwe.com/episode/SmackDown-130268`
+`python3 main.py -s https://network.wwe.com/season/15076`
 
-###### Download chapterised 720p video with Kodi series and episode NFO files:
+###### Download episode with start and end times, using custom file name:
 
-`python3 main.py -c -q 3 -s -e -t https://watch.wwe.com/episode/Bret-Hart-132278`
+`python3 main.py -st 00:49:04 -et 00:59:41 -of 'Chris Jericho vs Maven' -t https://network.wwe.com/video/67585`
 
+###### Download chapterised 720p video with date-prefixed output filename:
+
+`-dp` looks for a date in the episode title and adds it as a prefix for the output filename. e.g. `[2002-01-07] Raw - Jan. 07, 2002`. This is useful for sorting episodes chronologically. If you were downloading all Raw, SmackDown, and PPV events in 2002 for example and wanted to watch them in order - adding this date prefix, placing all files in the same directory, and sorting by name would mean all events are sorted by air date. 
+
+`python3 main.py -c -dp -q 2 -e https://network.wwe.com/video/67585`
 
 ### Options
 
-> **-t** - Link to the video you want to download.\
-> **-q** - Quality of the video you want to download. 1 is 1080p high (default) 6 being 288p (lowest).\
-> **-c** - Add milestone chapters to the video.\
-> **--subtitles** - Downloads the subtitles.\
-> **-of** - Specify custom name for output file.\
-> **-k** - Keep temporary aac and ts files.\
-> **-e** - Write a Kodi episode NFO file.\
-> **-s** - Write a Kodi series NFO file with poster and fanart.\
-> **-st** - Start time in seconds from where you want to start downloading.\
-> **-et** - End time in seconds from where you want to finish downloading.\
-> **-f** - Force the download of the video. Overwrites previously downloaded files.\
+#### Required options
+
+One of the following two options must be provided:
+> **-e** / **--episode** - Link or ID of single episode to download.\
+> **-s** / **--season** - Link or ID of season to download.
+
+#### Episode only options
+> **-st** / **--start-time** - Start time in `HH:MM:SS` format - where to start downloading.\
+> **-et** / **--end-time** - End time in `HH:MM:SS` format - where you want to finish downloading.\
+> **-of** / **--output-filename** - Specify custom name for output file.
+
+#### Season only options
+> **--episode-count** - Max number of episodes to download.\
+> **--season-from** - Link or ID of episode to start downloading from (ignore earlier episodes).\
+> **--season-to** - Link or ID of episode to stop downloading after (ignore later episodes).
+
+#### Other options
+> **-q** / **--quality** - Quality of the video you want to download. 0 is 1080p high (default) 6 is 288p (lowest).\
+> **-c** / **--chapters** - Add milestone chapters to the video.\
+> **-sb** / **--subtitles** - Downloads the subtitles.\
+> **-k** / **--keep-files** - Keep temporary aac and ts files.\
+> **-od** / **--output-dir** - Custom name for output directory (within `/output`).\
+> **-dp** / **--date-prefix** - Prefix output files with episode date in `[YYYY-MM-DD]` format (useful for chronological sorting).\
+> **-f** / **--force** - Force the download of the video. Overwrites previously downloaded files.
 
 
 
